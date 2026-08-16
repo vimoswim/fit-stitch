@@ -18,12 +18,13 @@ Works for any FIT activity — cycling, swimming, running.
 
 ## Features
 
-- Merges **2+ FIT activity files** into one, sorted by start time (rejects overlapping inputs)
+- Merges **2+ FIT activity files** into one, sorted by start time (rejects overlapping inputs and mixed activity types — only same-sport files merge)
 - Preserves the **full record stream**: GPS, HR, cadence, power, temperature, cycling dynamics, HRV, gear-change events — including undocumented Garmin messages
 - **Re-offsets distance** and accumulated power so file N continues where file N−1 ended; the gap between activities stays a pause in elapsed time
 - Rebuilds **one session + one activity**: time-weighted averages, summed totals, max/min fields, and Normalized Power / IF / TSS recomputed from the merged 1 Hz power stream
 - Renumbers laps and splits; merges split summaries
 - **Auto-validates** the output with the official Garmin FIT SDK (CRC, chronology, monotonic distance, single session/activity, distance sum)
+- Colorized CLI with **live progress logs** and a **side-by-side comparison table**: each source activity next to the merged result
 - Optional **TCX export** as a fallback
 
 ## Quick Start
@@ -51,6 +52,8 @@ fit-stitch ride-part1.fit ride-part2.fit -o full-ride.fit --tcx
 # Validate any FIT activity file
 fit-stitch validate full-ride.fit
 ```
+
+Progress logs go to stderr (`-q` silences them, `-v` adds debug detail); colors switch off automatically when output is piped or `NO_COLOR` is set.
 
 Then import the merged file in Garmin Connect via **Import Data** (connect.garmin.com/app/import-data). If the source activities already synced, delete them afterwards to avoid double-counted totals.
 
