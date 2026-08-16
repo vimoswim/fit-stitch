@@ -41,6 +41,7 @@ def make_activity(
     n_laps: int = 1,
     hr_sentinel: bool = False,
     with_accumulated_power: bool = True,
+    sport: int = Sport.CYCLING.value,
 ) -> Path:
     """Write a minimal but well-formed FIT activity file and return its path."""
     start_ms = round(start.timestamp() * 1000)
@@ -104,7 +105,7 @@ def make_activity(
     s.message_index = 0
     s.timestamp = end_ms
     s.start_time = start_ms
-    s.sport = Sport.CYCLING.value
+    s.sport = sport
     s.total_elapsed_time = float(duration_s)
     s.total_timer_time = float(duration_s)
     s.total_distance = speed * duration_s

@@ -3,6 +3,7 @@
 import datetime
 
 import pytest
+from fit_tool.profile.profile_type import Sport
 from garmin_fit_sdk import Decoder, Stream
 
 from fit_stitch.merge import MergeError, merge_files
@@ -103,6 +104,31 @@ def test_overlapping_inputs_rejected(tmp_path):
 def test_single_input_rejected(two_rides, tmp_path):
     with pytest.raises(MergeError, match="at least 2"):
         merge_files(two_rides[:1], tmp_path / "out.fit")
+
+
+def test_mismatched_sports_rejected(tmp_path):
+    t0 = datetime.datetime(2026, 6, 1, 9, 0, tzinfo=datetime.UTC)
+    a = make_activity(tmp_path / "ride.fit", start=t0)
+    b = make_activity(
+        tmp_path / "run.fit",
+        start=t0 + datetime.timedelta(minutes=6),
+        sport=Sport.RUNNING.value,
+    )
+    with pytest.raises(MergeError, match="different activity types.*cycling.*running"):
+        merge_files([a, b], tmp_path / "out.fit")
+
+
+def test_stats_carry_source_and_merged_summaries(two_rides, tmp_path):
+    stats = merge_files(two_rides, tmp_path / "merged.fit")
+    assert [s["name"] for s in stats.sources] == ["a.fit", "b.fit"]
+    assert all(s["sport"] == "cycling" for s in stats.sources)
+    assert stats.sources[0]["avg_power"] == 200
+    assert stats.sources[1]["avg_power"] == 100
+    assert stats.sources[0]["distance_m"] == pytest.approx(480.0)
+    assert stats.merged["name"] == "merged"
+    assert stats.merged["distance_m"] == pytest.approx(960.0)
+    assert stats.merged["timer_s"] == pytest.approx(120.0)
+    assert stats.merged["avg_power"] == 150
 
 
 def test_sentinel_hr_kept_from_first_file(tmp_path):
