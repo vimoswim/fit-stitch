@@ -6,6 +6,8 @@ Stitch two or more Garmin FIT activity files — e.g. a ride accidentally saved 
 [![CI](https://github.com/vimoswim/fit-stitch/actions/workflows/ci.yml/badge.svg)](https://github.com/vimoswim/fit-stitch/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 
+![fit-stitch merging two rides into one activity, with a side-by-side comparison table and validation checks](docs/cli-screenshot.png)
+
 ## Why
 
 You press *Save* instead of *Pause* mid-ride (or the device dies and you restart the recording), and one workout ends up as two FIT files. Naively concatenating them doesn't work — each file carries its own `session`, `activity`, lap numbering, a distance channel that restarts at zero, and a CRC. Garmin Connect rejects such combinations. `fit-stitch` decodes the files, rebuilds them as one activity, and re-encodes a valid FIT.
