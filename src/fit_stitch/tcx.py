@@ -17,7 +17,7 @@ SPORT_MAP = {
 _HEADER = (
     '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n'
     '<TrainingCenterDatabase xsi:schemaLocation="http://www.garmin.com/xmlschemas/'
-    "TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd\" "
+    'TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd" '
     'xmlns:ns3="http://www.garmin.com/xmlschemas/ActivityExtension/v2" '
     'xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" '
     'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'

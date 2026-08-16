@@ -48,9 +48,7 @@ def validate_fit(path: Path, expected_sources: list[Path] | None = None) -> Vali
     activities = messages.get("activity_mesgs", [])
     laps = messages.get("lap_mesgs", [])
 
-    chrono = all(
-        recs[i]["timestamp"] <= recs[i + 1]["timestamp"] for i in range(len(recs) - 1)
-    )
+    chrono = all(recs[i]["timestamp"] <= recs[i + 1]["timestamp"] for i in range(len(recs) - 1))
     report.add("records_chronological", chrono)
 
     dists = [r["distance"] for r in recs if r.get("distance") is not None]

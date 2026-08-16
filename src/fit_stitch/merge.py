@@ -18,7 +18,6 @@ from fit_tool.fit_file_builder import FitFileBuilder
 
 from fit_stitch.constants import (
     ACTIVITY,
-    EVENT,
     FILE_CREATOR,
     FILE_ID,
     LAP,
@@ -68,7 +67,7 @@ def _decode_sorted(paths: list[Path]) -> list[tuple[Path, FitFile]]:
         decoded.append((p, fit, session_msgs[0]))
 
     decoded.sort(key=lambda t: fval(t[2], "start_time"))
-    for (p1, _, s1), (p2, _, s2) in zip(decoded, decoded[1:]):
+    for (p1, _, s1), (p2, _, s2) in zip(decoded, decoded[1:], strict=False):
         end1 = fval(s1, "start_time") + round(fval(s1, "total_elapsed_time") * 1000)
         if fval(s2, "start_time") < end1:
             raise MergeError(f"activities overlap in time: {p1.name} and {p2.name}")

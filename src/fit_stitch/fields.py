@@ -12,6 +12,8 @@ fit-tool quirks this module encodes:
   ``combine`` refuses to fold them into sums/averages/extrema.
 """
 
+import contextlib
+
 from fit_tool.exceptions import FitEncodingError
 
 from fit_stitch.constants import (
@@ -40,7 +42,7 @@ def fset(msg, name, value):
     if f is None or value is None:
         return False
     try:
-        if isinstance(value, (list, tuple)):
+        if isinstance(value, list | tuple):
             for i, v in enumerate(value):
                 f.set_value(i, v)
         else:
@@ -115,10 +117,9 @@ def merge_summary(m1, m2, w1, w2):
         rule = _rule_for(name)
         if rule is None:
             continue
-        for i, (v1, v2) in enumerate(zip(vs1, vs2)):
+        for i, (v1, v2) in enumerate(zip(vs1, vs2, strict=False)):
             r = combine(v1, v2, w1, w2, rule)
             if r is not None:
-                try:
+                # out of range (e.g. both inputs invalid sentinels): keep m1's value
+                with contextlib.suppress(FitEncodingError):
                     f.set_value(i, r)
-                except FitEncodingError:
-                    pass  # out of range (e.g. both inputs invalid sentinels): keep m1's value
