@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a problem with fit-stitch
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **Never attach personal FIT files.** They contain precise GPS traces
+        (often starting at your home) and health data. Describe the file instead
+        (device, sport, size), or reproduce with a synthetic file — see
+        `tests/conftest.py`. For sensitive reproductions, email contact@vimoswim.com.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact fit-stitch command you ran (redact file paths if needed)
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior (full output / traceback)
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Recording device
+      placeholder: e.g. Garmin Edge 840, Forerunner 965
+  - type: input
+    id: versions
+    attributes:
+      label: fit-stitch version / Python version / OS
+      placeholder: e.g. 0.1.0 / 3.12 / macOS 15

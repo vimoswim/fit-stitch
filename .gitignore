@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Privacy backstop: real activity files must never enter the repo
+*.fit
+*.tcx
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Env
+.env
+.env.*
+*.log
