@@ -6,7 +6,7 @@ Stitch two or more Garmin FIT activity files — e.g. a ride accidentally saved 
 [![CI](https://github.com/vimoswim/fit-stitch/actions/workflows/ci.yml/badge.svg)](https://github.com/vimoswim/fit-stitch/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 
-![fit-stitch merging two rides into one activity, with a side-by-side comparison table and validation checks](docs/fit-stitch-cli.webp)
+![fit-stitch merging two rides into one activity, with a side-by-side comparison table and validation checks](https://vimoswim.com/images/blog/vimoswim_blog_fit-stitch-cli.webp)
 
 ## Why
 
