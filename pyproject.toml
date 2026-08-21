@@ -32,6 +32,11 @@ packages = [{ include = "fit_stitch", from = "src" }]
 pytest = "^8.0"
 ruff = "^0.6"
 
+
+[tool.poetry.group.web.dependencies]
+playwright = "^1.62.0"
+pytest-playwright = "^0.9.0"
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

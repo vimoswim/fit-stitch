@@ -6,7 +6,6 @@ Usage:
 """
 
 import argparse
-import datetime
 import logging
 import os
 import sys
@@ -14,6 +13,7 @@ from pathlib import Path
 
 from fit_stitch import __version__
 from fit_stitch.merge import MergeError, MergeStats, merge_files
+from fit_stitch.report import build_comparison
 from fit_stitch.tcx import export_tcx
 from fit_stitch.validate import ValidationReport, validate_fit
 
@@ -57,41 +57,11 @@ def _print_report(report: ValidationReport, show_stats: bool = True) -> None:
             print(f"    {_paint(f'{k}:', 'dim', c)} {v}")
 
 
-def _fmt_dur(sec: float) -> str:
-    sec = round(sec)
-    return f"{sec // 3600}:{sec % 3600 // 60:02d}:{sec % 60:02d}"
-
-
-def _fmt_start(ms: int) -> str:
-    return datetime.datetime.fromtimestamp(ms / 1000, datetime.UTC).strftime("%H:%M:%S")
-
-
-_COMPARISON_ROWS = {
-    "sport": ("sport", str),
-    "start_ms": ("start (UTC)", _fmt_start),
-    "distance_m": ("distance", lambda m: f"{m / 1000:.2f} km"),
-    "timer_s": ("moving time", _fmt_dur),
-    "elapsed_s": ("elapsed time", _fmt_dur),
-    "avg_speed_ms": ("avg speed", lambda v: f"{v * 3.6:.1f} km/h"),
-    "avg_power": ("avg power", lambda v: f"{v} W"),
-    "max_power": ("max power", lambda v: f"{v} W"),
-    "normalized_power": ("norm power", lambda v: f"{v} W"),
-    "avg_hr": ("avg HR", lambda v: f"{v} bpm"),
-    "max_hr": ("max HR", lambda v: f"{v} bpm"),
-    "ascent_m": ("ascent", lambda v: f"{v} m"),
-    "calories": ("calories", lambda v: f"{v} kcal"),
-}
-
-
 def _print_comparison(stats: MergeStats) -> None:
     """Box-drawn table: one column per input activity, last column = merged."""
-    cols = [*stats.sources, stats.merged]
-    header = ["", *[c["name"] for c in cols]]
-    body = []
-    for key, (label, fmt) in _COMPARISON_ROWS.items():
-        vals = ["—" if c.get(key) is None else fmt(c[key]) for c in cols]
-        if any(v != "—" for v in vals):
-            body.append([label, *vals])
+    table = build_comparison(stats)
+    header = ["", *table["columns"]]
+    body = [[row["label"], *row["values"]] for row in table["rows"]]
 
     c = _use_color(sys.stdout)
     widths = [max(len(row[i]) for row in [header, *body]) for i in range(len(header))]

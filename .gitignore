@@ -20,3 +20,9 @@ dist/
 .env
 .env.*
 *.log
+
+# Web build artifacts (regenerate with scripts/build-web-assets.sh)
+web/public/wheels/
+web/node_modules/
+web/package-lock.json
+web/package.json
