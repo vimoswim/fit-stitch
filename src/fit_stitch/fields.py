@@ -52,12 +52,6 @@ def fset(msg, name, value):
     return True
 
 
-def is_session_scoped_tiz(msg):
-    """True for time_in_zone messages that reference the session message."""
-    ref = fval(msg, "reference_mesg")
-    return ref in (18, "18", "session")
-
-
 def combine(v1, v2, w1, w2, rule):
     """Combine two field values by rule ('sum'/'max'/'min'/'avg').
 

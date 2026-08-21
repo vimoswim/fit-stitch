@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Merge output shows only validation checks; the full stats dump stays in
   `fit-stitch validate`
+- Merging now walks inputs at the wire level and copies untouched records
+  through as their original bytes, decoding into typed messages only where
+  fields are actually rewritten. Merging two 20 000-record files drops from
+  49 s and 1.5 GB of memory to 1.5 s and 65 MB. Output and CLI behaviour are
+  unchanged; record preservation is now byte-for-byte by construction
 
 ## [0.1.0] - 2026-08-16
 

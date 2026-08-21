@@ -4,8 +4,11 @@ import datetime
 
 import pytest
 from fit_tool.profile.profile_type import Sport
+from fit_tool.wire import WireDecoder
+from fit_tool.wire.model import RawDataRecord
 from garmin_fit_sdk import Decoder, Stream
 
+from fit_stitch.constants import RECORD
 from fit_stitch.merge import MergeError, merge_files
 from tests.conftest import FIT_EPOCH_S, TZ_OFFSET_S, make_activity
 
@@ -150,3 +153,48 @@ def test_local_timestamp_keeps_timezone_offset(two_rides, tmp_path):
     a = decode(out)["activity_mesgs"][0]
     end_fit_s = round(a["timestamp"].timestamp()) - FIT_EPOCH_S
     assert a["local_timestamp"] - end_fit_s == TZ_OFFSET_S
+
+
+def test_first_file_records_survive_byte_for_byte(two_rides, tmp_path):
+    """The merge copies untouched records verbatim rather than re-encoding them.
+
+    File 1 needs no distance or power offset, so every one of its record
+    messages must appear in the output exactly as it was read. This is what
+    keeps undocumented Garmin messages intact: preservation is a property of
+    the bytes, not of how well the profile happens to describe a message.
+    """
+    document = WireDecoder().decode(two_rides[0].read_bytes())
+    source_records = [
+        r
+        for segment in document.segments
+        for r in segment.records
+        if isinstance(r, RawDataRecord) and r.definition.global_id == RECORD
+    ]
+    assert source_records
+
+    out = tmp_path / "merged.fit"
+    merge_files(two_rides, out)
+    merged = out.read_bytes()
+
+    run = b"".join(r.source_bytes for r in source_records)
+    assert run in merged, "file 1's record stream was not copied verbatim"
+
+
+def test_second_file_records_differ_only_in_the_offset_fields(two_rides, tmp_path):
+    """File 2 is rewritten only where the merge says it should be."""
+    document = WireDecoder().decode(two_rides[1].read_bytes())
+    source_records = [
+        r
+        for segment in document.segments
+        for r in segment.records
+        if isinstance(r, RawDataRecord) and r.definition.global_id == RECORD
+    ]
+
+    out = tmp_path / "merged.fit"
+    merge_files(two_rides, out)
+    merged = out.read_bytes()
+
+    # Same length, same header byte, but shifted distance/accumulated power, so
+    # the original bytes must be gone while the record count stays the same.
+    assert source_records[-1].source_bytes not in merged
+    assert len(decode(out)["record_mesgs"]) == 120
