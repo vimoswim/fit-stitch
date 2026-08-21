@@ -46,6 +46,10 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Browser tests need Chromium and a built web/public; they are excluded from the
+# default run and enabled with: pytest -m web
+addopts = "-m 'not web'"
+markers = ["web: browser tests (need Chromium and scripts/build-web-assets.sh)"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

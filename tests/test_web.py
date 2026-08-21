@@ -127,3 +127,13 @@ def test_validate_reports_a_corrupt_file_instead_of_raising():
 
     assert report["ok"] is False
     assert not report["checks"][0]["passed"]
+
+
+def test_progress_lines_do_not_leak_the_scratch_directory(two_rides):
+    """The user sees file names, not the temporary path they were staged in."""
+    lines = []
+
+    merge_bytes(as_pairs(two_rides), on_progress=lines.append)
+
+    assert any("merged.fit" in line for line in lines)
+    assert not any("fit-stitch-" in line and "/tmp" in line for line in lines)

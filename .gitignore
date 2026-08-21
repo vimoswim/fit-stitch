@@ -21,8 +21,7 @@ dist/
 .env.*
 *.log
 
-# Web build artifacts (regenerate with scripts/build-web-assets.sh)
-web/public/wheels/
+# Web build artifacts (regenerate with scripts/build-web-assets.sh).
+# package.json / package-lock.json are committed: they pin the Pyodide version.
+web/public/
 web/node_modules/
-web/package-lock.json
-web/package.json

@@ -69,6 +69,23 @@ if len(wheels) != 3:
 print(json.dumps({"engine": version, "wheels": wheels}, indent=2))
 PY
 
+echo "==> staging the Pyodide runtime"
+PYODIDE_SRC="$ROOT/web/node_modules/pyodide"
+PYODIDE_OUT="$ROOT/web/public/pyodide"
+if [ -d "$PYODIDE_SRC" ]; then
+  rm -rf "$PYODIDE_OUT"
+  mkdir -p "$PYODIDE_OUT"
+  # Only what loadPyodide actually fetches; the npm package also ships types,
+  # source maps and a REPL that would double the deployed size for nothing.
+  for f in pyodide.mjs pyodide.asm.mjs pyodide.asm.wasm python_stdlib.zip pyodide-lock.json; do
+    cp "$PYODIDE_SRC/$f" "$PYODIDE_OUT/"
+  done
+  echo "    $(du -sh "$PYODIDE_OUT" | cut -f1) in $PYODIDE_OUT"
+  echo "    version $(node -e "console.log(require('$PYODIDE_SRC/package.json').version)" 2>/dev/null || echo unknown)"
+else
+  echo "    skipped: run 'npm install pyodide' in web/ first" >&2
+fi
+
 echo
 echo "wheels ready in $OUT"
 echo "to publish, copy them into the website repo:"

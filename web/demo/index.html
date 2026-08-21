@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fit-stitch</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #fbfbfa; --panel: #fff; --ink: #1b1b19; --muted: #6b6b66;
+  --line: #e3e3df; --accent: #1f6feb; --ok: #17803d; --bad: #c0392b;
+  --drop: #f4f6fb;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141614; --panel: #1c1f1d; --ink: #ececea; --muted: #9a9a94;
+    --line: #2e322f; --accent: #6ea8ff; --ok: #4ade80; --bad: #f87171;
+    --drop: #1a1f26;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 2rem 1.25rem 4rem; background: var(--bg); color: var(--ink);
+  font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 60rem; margin: 0 auto; }
+h1 { font-size: 1.7rem; margin: 0 0 .3rem; letter-spacing: -.02em; }
+.lede { color: var(--muted); margin: 0 0 1.75rem; max-width: 46rem; }
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 1.25rem; margin-bottom: 1.25rem;
+}
+#drop {
+  border: 2px dashed var(--line); border-radius: 12px; background: var(--drop);
+  padding: 2.25rem 1.25rem; text-align: center; cursor: pointer; transition: border-color .15s;
+}
+#drop.over { border-color: var(--accent); }
+#drop p { margin: .35rem 0; color: var(--muted); }
+#drop strong { color: var(--ink); }
+ul#files { list-style: none; margin: 1rem 0 0; padding: 0; }
+ul#files li {
+  display: flex; gap: .75rem; align-items: center; padding: .5rem .75rem;
+  border: 1px solid var(--line); border-radius: 8px; margin-bottom: .4rem;
+}
+ul#files .name { flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; }
+ul#files .size { color: var(--muted); font-size: .85rem; }
+button {
+  font: inherit; font-weight: 600; padding: .6rem 1.1rem; border-radius: 8px;
+  border: 1px solid transparent; background: var(--accent); color: #fff; cursor: pointer;
+}
+button[disabled] { opacity: .45; cursor: not-allowed; }
+button.ghost { background: transparent; color: var(--muted); border-color: var(--line); font-weight: 500; }
+.row { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
+label.check { display: flex; gap: .4rem; align-items: center; color: var(--muted); font-size: .92rem; }
+pre#log {
+  margin: 0; max-height: 13rem; overflow: auto; background: var(--drop);
+  border: 1px solid var(--line); border-radius: 8px; padding: .75rem;
+  font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted);
+  white-space: pre-wrap; word-break: break-word;
+}
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+th, td { padding: .45rem .7rem; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; color: var(--muted); }
+thead th { font-weight: 600; }
+tbody td:last-child, thead th:last-child { color: var(--ok); font-weight: 600; }
+ul.checks { list-style: none; padding: 0; margin: 0; column-width: 15rem; }
+ul.checks li { padding: .15rem 0; font-size: .92rem; }
+.mark { font-weight: 700; }
+.pass { color: var(--ok); } .fail { color: var(--bad); }
+.detail { color: var(--muted); }
+.error {
+  border-left: 3px solid var(--bad); background: var(--drop); padding: .75rem 1rem;
+  border-radius: 6px; color: var(--bad);
+}
+.hint { color: var(--muted); font-size: .9rem; }
+h2 { font-size: 1.05rem; margin: 0 0 .8rem; }
+.hidden { display: none; }
+footer { color: var(--muted); font-size: .85rem; margin-top: 2rem; }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>fit-stitch</h1>
+  <p class="lede">
+    Press <em>Save</em> instead of <em>Pause</em> mid-ride and one workout ends up as two
+    FIT files that Garmin Connect will not accept as one. Drop them here to get a single
+    valid activity back.
+    <strong>Your files never leave this browser</strong> — the merge runs on your own
+    machine, so nothing is uploaded and nothing is stored.
+  </p>
+
+  <div class="panel">
+    <div id="drop" tabindex="0" role="button" aria-label="Choose FIT files">
+      <p><strong>Drop your .fit files here</strong></p>
+      <p>or click to choose — two or more, order does not matter</p>
+    </div>
+    <input id="picker" type="file" accept=".fit" multiple class="hidden">
+    <ul id="files"></ul>
+    <div class="row">
+      <button id="go" disabled>Merge</button>
+      <button id="clear" class="ghost">Clear</button>
+      <label class="check"><input type="checkbox" id="tcx"> also export TCX</label>
+      <span class="hint" id="status"></span>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="errorPanel"><div class="error" id="errorText"></div></div>
+
+  <div class="panel hidden" id="logPanel">
+    <h2>Progress</h2>
+    <pre id="log"></pre>
+  </div>
+
+  <div class="panel hidden" id="resultPanel">
+    <h2 id="headline"></h2>
+    <div class="tablewrap"><table id="comparison"></table></div>
+    <h2 style="margin-top:1.5rem">Validation</h2>
+    <ul class="checks" id="checks"></ul>
+    <div class="row">
+      <button id="download">Download merged.fit</button>
+      <button id="downloadTcx" class="ghost hidden">Download merged.tcx</button>
+    </div>
+    <p class="hint" style="margin-top:1rem">
+      Import it in Garmin Connect via <strong>Import Data</strong>. If the original
+      activities already synced, delete them afterwards so totals are not counted twice.
+    </p>
+  </div>
+
+  <footer>
+    Engine <span id="engine">—</span> ·
+    <a href="https://github.com/vimoswim/fit-stitch">fit-stitch</a> by
+    <a href="https://vimoswim.com">Vimo Swim</a>
+  </footer>
+</main>
+
+<script type="module">
+const BASE = new URL("../public/", location.href).href;
+const $ = (id) => document.getElementById(id);
+const worker = new Worker(new URL("../worker.js", import.meta.url), { type: "module" });
+
+let chosen = [];
+let output = null;
+
+const show = (el, on) => el.classList.toggle("hidden", !on);
+const setStatus = (text) => { $("status").textContent = text; };
+
+function renderFiles() {
+  $("files").innerHTML = "";
+  for (const [i, file] of chosen.entries()) {
+    const li = document.createElement("li");
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = file.name;
+    const size = document.createElement("span");
+    size.className = "size";
+    size.textContent = `${(file.size / 1024).toFixed(0)} KB`;
+    const drop = document.createElement("button");
+    drop.className = "ghost";
+    drop.textContent = "Remove";
+    drop.onclick = () => { chosen.splice(i, 1); renderFiles(); };
+    li.append(name, size, drop);
+    $("files").append(li);
+  }
+  $("go").disabled = chosen.length < 2;
+}
+
+function addFiles(list) {
+  chosen.push(...[...list].filter((f) => f.name.toLowerCase().endsWith(".fit")));
+  renderFiles();
+}
+
+const drop = $("drop");
+drop.onclick = () => $("picker").click();
+drop.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") $("picker").click(); };
+drop.ondragover = (e) => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove("over"); addFiles(e.dataTransfer.files); };
+$("picker").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
+$("clear").onclick = () => {
+  chosen = []; output = null; renderFiles();
+  for (const id of ["errorPanel", "logPanel", "resultPanel"]) show($(id), false);
+  setStatus("");
+};
+
+$("go").onclick = async () => {
+  $("go").disabled = true;
+  show($("errorPanel"), false);
+  show($("resultPanel"), false);
+  show($("logPanel"), true);
+  $("log").textContent = "";
+  setStatus("loading the Python runtime…");
+
+  const files = await Promise.all(
+    chosen.map(async (f) => ({ name: f.name, buffer: await f.arrayBuffer() })),
+  );
+  worker.postMessage(
+    { type: "merge", baseUrl: BASE, files, tcx: $("tcx").checked },
+    files.map((f) => f.buffer),
+  );
+};
+
+function renderComparison(table) {
+  const head = `<thead><tr><th></th>${table.columns.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead>`;
+  const body = table.rows
+    .map((r) => `<tr><td>${esc(r.label)}</td>${r.values.map((v) => `<td>${esc(v)}</td>`).join("")}</tr>`)
+    .join("");
+  $("comparison").innerHTML = `${head}<tbody>${body}</tbody>`;
+}
+
+function renderChecks(validation) {
+  $("checks").innerHTML = validation.checks
+    .map((c) => {
+      const mark = c.passed ? '<span class="mark pass">✓</span>' : '<span class="mark fail">✗</span>';
+      const detail = c.detail ? ` <span class="detail">(${esc(c.detail)})</span>` : "";
+      return `<li>${mark} ${esc(c.name)}${detail}</li>`;
+    })
+    .join("");
+}
+
+const esc = (s) =>
+  String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+function save(bytes, name) {
+  const url = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function fail(message) {
+  $("errorText").textContent = message;
+  show($("errorPanel"), true);
+  setStatus("");
+  $("go").disabled = chosen.length < 2;
+}
+
+worker.onmessage = ({ data }) => {
+  if (data.type === "ready") {
+    $("engine").textContent = data.engine;
+    return;
+  }
+  if (data.type === "progress") {
+    $("log").textContent += data.line + "\n";
+    $("log").scrollTop = $("log").scrollHeight;
+    setStatus("merging…");
+    return;
+  }
+  if (data.type === "error") return fail(data.message);
+
+  const result = data.result;
+  if (!result.ok) return fail(result.error);
+
+  output = result;
+  $("engine").textContent = result.engine;
+  const s = result.summary;
+  $("headline").textContent =
+    `Merged ${s.files} files: ${s.records} records, ${s.laps} laps, ` +
+    `${(s.total_distance / 1000).toFixed(2)} km` +
+    (s.normalized_power ? `, NP ${s.normalized_power} W` : "");
+  renderComparison(result.comparison);
+  renderChecks(result.validation);
+  show($("downloadTcx"), !!result.tcx);
+  show($("resultPanel"), true);
+  setStatus(result.validation.ok ? "done" : "done — validation reported problems");
+  $("go").disabled = chosen.length < 2;
+};
+
+$("download").onclick = () => output && save(output.output, output.output_name);
+$("downloadTcx").onclick = () => output && output.tcx && save(output.tcx, output.tcx_name);
+
+worker.postMessage({ type: "init", baseUrl: BASE });
+window.FIT_STITCH_READY = true;
+</script>
+</body>
+</html>

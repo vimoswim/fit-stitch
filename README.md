@@ -27,6 +27,13 @@ Works for any FIT activity — cycling, swimming, running.
 - Colorized CLI with **live progress logs** and a **side-by-side comparison table**: each source activity next to the merged result
 - Optional **TCX export** as a fallback
 
+## In the browser
+
+The same merge also runs entirely client-side under Pyodide — no upload, no
+server — which is what will sit behind **vimoswim.com/apps/fit-stitch**. FIT
+files carry GPS traces, so the browser build keeps them in the tab they were
+dropped into. See [web/README.md](web/README.md) to build, test or deploy it.
+
 ## Quick Start
 
 ### Prerequisites

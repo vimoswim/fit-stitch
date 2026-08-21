@@ -32,23 +32,30 @@ log = logging.getLogger("fit_stitch")
 
 
 class _CallbackHandler(logging.Handler):
-    """Forward the library's progress lines to a caller-supplied callback."""
+    """Forward the library's progress lines to a caller-supplied callback.
 
-    def __init__(self, callback):
+    The library logs absolute paths, which on this path point into a scratch
+    directory the caller never sees. Stripping that prefix leaves the file names
+    the user recognises instead of a temporary directory name.
+    """
+
+    def __init__(self, callback, strip: str = ""):
         super().__init__(level=logging.INFO)
         self.callback = callback
+        self.strip = strip
 
     def emit(self, record):
         # a failing UI callback must never abort the merge
         with contextlib.suppress(Exception):
-            self.callback(self.format(record))
+            line = self.format(record)
+            self.callback(line.replace(self.strip, "") if self.strip else line)
 
 
 class _Progress:
     """Install the progress handler for the duration of a call, then remove it."""
 
-    def __init__(self, callback):
-        self.handler = _CallbackHandler(callback) if callback else None
+    def __init__(self, callback, strip: str = ""):
+        self.handler = _CallbackHandler(callback, strip) if callback else None
 
     def __enter__(self):
         if self.handler:
@@ -117,7 +124,7 @@ def merge_bytes(files, *, tcx: bool = False, validate: bool = True, on_progress=
             paths.append(path)
 
         out = workdir / OUTPUT_NAME
-        with _Progress(on_progress):
+        with _Progress(on_progress, strip=f"{workdir}/"):
             try:
                 stats = merge_files(paths, out)
             except MergeError as e:

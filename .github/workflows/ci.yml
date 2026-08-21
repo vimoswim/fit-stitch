@@ -18,3 +18,23 @@ jobs:
       - run: poetry run ruff check .
       - run: poetry run ruff format --check .
       - run: poetry run pytest
+
+  # Kept separate so the main suite stays fast: this one installs a browser and
+  # builds the wheels and Pyodide runtime the page loads.
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: pip install poetry
+      - run: poetry install --with web
+      - run: npm ci
+        working-directory: web
+      - run: ./scripts/build-web-assets.sh
+      - run: poetry run playwright install --with-deps chromium
+      - run: poetry run pytest -m web

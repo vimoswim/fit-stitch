@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Box-drawn side-by-side comparison table: each source activity next to
   the merged result
 - Same-sport guard: merging different activity types is rejected
+- Browser build: `fit_stitch.web` runs the merge in-memory under Pyodide, with
+  a Web Worker, a demo page and a Vue component for embedding in a site. Files
+  are never uploaded — the merge runs in the user's own browser
+- `fit_stitch.report` holds the comparison table's rows and units, shared by the
+  CLI and the browser build
+- `scripts/build-web-assets.sh` builds the wheels and stages the Pyodide runtime
 
 ### Changed
 
